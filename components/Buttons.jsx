@@ -1,12 +1,12 @@
 import React from "react";
-import { TouchableOpacity, Text, StyleSheet, useColorScheme } from "react-native";
+import { TouchableOpacity, Text, StyleSheet, useColorScheme, Pressable } from "react-native";
 
 const Buttons = ({ title, onPress }) => {
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === "dark";
 
   return (
-    <TouchableOpacity
+    <Pressable
       style={[styles.button, isDarkMode ? styles.darkButton : styles.lightButton]}
       onPress={onPress}
       accessibilityLabel={title}
@@ -14,7 +14,7 @@ const Buttons = ({ title, onPress }) => {
       <Text style={[styles.buttonText, isDarkMode ? styles.darkButtonText : styles.lightButtonText]}>
         {title}
       </Text>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

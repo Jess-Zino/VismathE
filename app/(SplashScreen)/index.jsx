@@ -5,12 +5,10 @@ import {
   Pressable,
   Image,
   Dimensions,
-  Button,
 } from "react-native";
 import React from "react";
 import { Link } from "expo-router";
 import image from "../../assets/images/logo.png";
-import Buttons from "@/components/Buttons";
 
 const { width } = Dimensions.get("window"); // Get screen width
 
@@ -28,9 +26,12 @@ const App = () => {
       <Text style={[styles.text, { fontSize: getFontSize() }]}>
         Welcome to VisMath
       </Text>
-      <Pressable style={styles.button}>
-        <Buttons title="Proceed" />
-      </Pressable>
+
+      <Link href="/(auth)/(login)/page" asChild>
+        <Pressable style={styles.button}>
+          <Text style={styles.buttonText}>Proceed</Text>
+        </Pressable>
+      </Link>
     </View>
   );
 };
@@ -42,25 +43,25 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "space-evenly",
     alignItems: "center",
-    marginBottom: 40,
+    paddingBottom: 100,
   },
   text: {
     color: "white",
     fontFamily: "PoppinsBlack",
   },
   button: {
-    padding: 15,
-    fontFamily: "PoppinsMedium",
+    backgroundColor: "#1E90FF",
+    padding: 25,
     borderRadius: 10,
-    width: "90%",
+    width: "75%",
     alignItems: "center",
     marginVertical: 10,
   },
-  logo: {
-    width: 100,
-    height: 100,
-    resizeMode: "contain",
-    boxShadow: " 10px 1px 10px rgba(255, 255,255)",
+  buttonText: {
+    color: "#FFFFFF",
+    fontSize: 20,
+    fontFamily: "PoppinsBold",
+    fontWeight: "bold",
   },
 });
 
