@@ -6,7 +6,7 @@ const app = () => {
   return (
     <View>
       <Text style={styles.text}>index</Text>
-      <Link href="/(auth)/page" asChild>
+      <Link href="/(auth)/(login)/page" asChild>
         <Pressable>
             <Text style={styles.text}>Home</Text>
         </Pressable>
