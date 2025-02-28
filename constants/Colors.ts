@@ -15,12 +15,15 @@ export const Colors = {
     tabIconDefault: '#A3A3A3', // Light Gray for inactive icons
     tabIconSelected: tintColorLight, // Yellow for selected icons
     buttonBackground: '#1F2937', // Dark Gray for buttons
-    buttonText: '#FFFFFF', // White text on buttons
+    buttonText: '#FFFFFF', 
+    btnBorder:"#000",// White text on buttons
   },
   dark: {
     text: '#F5F5F5', // Light Gray
     background: '#1E2931', // Dark Gray
     tint: tintColorDark,
+    btnBorder:"#fff",
+    btnColor:"#000",
     icon: '#9BA1A6', // Light Blue Gray
     tabIconDefault: '#4B5563', // Dark Gray for inactive icons
     tabIconSelected: tintColorDark, // Yellow for selected icons
