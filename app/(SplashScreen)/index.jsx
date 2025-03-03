@@ -155,7 +155,11 @@ const App = () => {
               color={theme.text}
             />
           </Pressable>
-          <Text style={[styles.text, { fontSize: getFontSize() }]}>Welcome to VisMath</Text>
+          <Text
+            style={[styles.text, { fontSize: getFontSize(), letterSpacing: 2 }]}
+          >
+            Welcome to VisMath
+          </Text>
           <View style={{ width: "100%", alignItems: "center" }}>
             <Link href="/(auth)/(login)/page" asChild>
               <Pressable style={styles.button}>
@@ -164,13 +168,24 @@ const App = () => {
             </Link>
             <Link href="/(auth)/(Register)/page" asChild>
               <Pressable style={styles.regbutton}>
-                <Text style={[styles.buttonText, { color: darkMode ? "#fff" : "#000" }]}>Register</Text>
+                <Text
+                  style={[
+                    styles.buttonText,
+                    { color: darkMode ? "#fff" : "#000" },
+                  ]}
+                >
+                  Register
+                </Text>
               </Pressable>
             </Link>
           </View>
           {/* Replay Button */}
           <Pressable style={styles.replayButton} onPress={replayAudio}>
-            <Ionicons name={isPlaying ? "pause" : "play"} size={32} color="#000" />
+            <Ionicons
+              name={isPlaying ? "pause" : "play"}
+              size={32}
+              color="#000"
+            />
           </Pressable>
         </View>
       </PanGestureHandler>
