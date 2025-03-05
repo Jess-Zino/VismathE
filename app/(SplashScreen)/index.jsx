@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useCallback } from "react";
 import {
   View,
   Text,
@@ -13,6 +13,7 @@ import {
   PanGestureHandler,
 } from "react-native-gesture-handler";
 import { Audio } from "expo-av";
+import { useFocusEffect } from "@react-navigation/native";
 import image from "../../assets/images/logo.png";
 import { Colors } from "@/constants/Colors";
 import { Feather, Ionicons } from "@expo/vector-icons";
@@ -31,33 +32,41 @@ const App = () => {
   const [sound, setSound] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
 
-  useEffect(() => {
-    const loadAndPlayAudio = async () => {
-      try {
-        const { sound } = await Audio.Sound.createAsync(
-          require("../../assets/audio/Welcome.mp3")
-        );
-        setSound(sound);
-        await sound.playAsync();
-        setIsPlaying(true);
+  useFocusEffect(
+    useCallback(() => {
+      let currentSound;
 
-        sound.setOnPlaybackStatusUpdate((status) => {
-          if (status.didJustFinish) {
-            setIsPlaying(false);
-          }
-        });
-      } catch (error) {
-        console.error("Error loading or playing audio:", error);
-      }
-    };
+      const loadAndPlayAudio = async () => {
+        try {
+          const { sound } = await Audio.Sound.createAsync(
+            require("../../assets/audio/Welcome.mp3")
+          );
+          setSound(sound);
+          currentSound = sound;
+          await sound.playAsync();
+          setIsPlaying(true);
 
-    loadAndPlayAudio();
-    return () => {
-      if (sound) {
-        sound.unloadAsync();
-      }
-    };
-  }, []);
+          sound.setOnPlaybackStatusUpdate((status) => {
+            if (status.didJustFinish) {
+              setIsPlaying(false);
+            }
+          });
+        } catch (error) {
+          console.error("Error loading or playing audio:", error);
+        }
+      };
+
+      loadAndPlayAudio();
+
+      return () => {
+        if (currentSound) {
+          currentSound.stopAsync();
+          currentSound.unloadAsync();
+        }
+      };
+    }, [])
+  );
+
 
   const replayAudio = async () => {
     if (sound) {
@@ -138,7 +147,7 @@ const App = () => {
       fontSize: 23,
       fontFamily: "PoppinsBold",
     },
-  });
+  }); 
 
   return (
     <GestureHandlerRootView>

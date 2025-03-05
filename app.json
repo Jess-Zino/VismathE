@@ -3,6 +3,9 @@
     "name": "Vismath",
     "slug": "Vismath",
     "version": "1.0.0",
+    "permissions": [
+      "MICROPHONE"
+    ],
     "orientation": "portrait",
     "icon": "./assets/images/logo.png",
     "scheme": "myapp",
@@ -20,7 +23,8 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.anonymous.Vismath"
     },
     "web": {
       "bundler": "metro",
@@ -37,7 +41,9 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-speech-recognition",
+      "expo-secure-store"
     ],
     "experiments": {
       "typedRoutes": true
