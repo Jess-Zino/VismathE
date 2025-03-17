@@ -6,33 +6,82 @@ import {
   Pressable,
 } from "react-native";
 import React, { useState } from "react";
-import { Link } from "expo-router";
-import { Colors } from "../../../constants/Colors";
 import { FontAwesome } from "@expo/vector-icons";
+import { Colors } from "../../../constants/Colors";
 
 const Register = () => {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
+  const [pin, setPin] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+
+  const [confirmPin, setConfirmPin] = useState("");
   const [error, setError] = useState("");
   const [darkMode, setDarkMode] = useState(true);
 
   const theme = darkMode ? Colors.dark : Colors.light;
 
-  const handleRegister = () => {
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
+  const validatePin = (value) => {
+    return /^(\d{4}|\d{6})$/.test(value);
+  };
+
+  const handleRegister = async () => {
     if (password.length < 6) {
       setError("Password must be at least 6 characters long");
       return;
     }
+    if (!validatePin(pin)) {
+      setError("PIN must be 4 or 6 digits long.");
+      return;
+    }
+    if (pin !== confirmPin) {
+      setError("PINs do not match");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+  
     setError("");
-    // Proceed with registration logic
+  
+    const payload = {
+      firstname: firstName,
+      lastname: lastName,
+      email: email,
+      password: password, // Using PIN as password since no password input is present
+      pin: pin,
+    };
+  
+    try {
+      const response = await fetch("http://localhost:8000/api/v1/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+  
+      const data = await response.json();
+  
+      if (response.ok) {
+        alert("Registration successful!");
+        // Reset form fields
+        setFirstName("");
+        setLastName("");
+        setEmail("");
+        setPin("");
+        setConfirmPin("");
+      } else {
+        setError(data.detail); // FastAPI sends error messages in the "detail" field
+      }
+    } catch (error) {
+      setError("An error occurred. Please try again.");
+    }
   };
+  
 
   const styles = StyleSheet.create({
     container: {
@@ -122,7 +171,7 @@ const Register = () => {
         onChangeText={setEmail}
       />
 
-      <Text style={styles.label}>Password:</Text>
+<Text style={styles.label}>Password:</Text>
       <TextInput
         style={styles.input}
         placeholder="Enter your password"
@@ -140,6 +189,29 @@ const Register = () => {
         secureTextEntry
         value={confirmPassword}
         onChangeText={setConfirmPassword}
+      />
+      <Text style={styles.label}>PIN:</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Enter a 4 or 6-digit PIN"
+        placeholderTextColor={theme.placeholder}
+        keyboardType="numeric"
+        maxLength={6}
+        secureTextEntry
+        value={pin}
+        onChangeText={setPin}
+      />
+
+      <Text style={styles.label}>Confirm PIN:</Text>
+      <TextInput
+        style={styles.input}
+        placeholder="Re-enter your PIN"
+        placeholderTextColor={theme.placeholder}
+        keyboardType="numeric"
+        maxLength={6}
+        secureTextEntry
+        value={confirmPin}
+        onChangeText={setConfirmPin}
       />
 
       {error ? <Text style={styles.errorText}>{error}</Text> : null}
