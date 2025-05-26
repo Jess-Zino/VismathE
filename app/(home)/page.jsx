@@ -24,11 +24,11 @@ const Home = () => {
 
 
   const options = [
-    { id: "convert_image", label: "Convert Image to Braille", icon: "image", description: "Turn images into readable braille." },
-    { id: "document_braille", label: "Document to Braille", icon: "file-text", description: "Convert documents into braille format." },
-    { id: "recordings", label: "Recordings", icon: "microphone", description: "Access and manage audio recordings." },
-    { id: "text_braille", label: "Text to Braille", icon: "font", description: "Translate written text into braille." },
-    { id: "braille_text", label: "Braille to Text", icon: "braille", description: "Convert braille back into readable text." },
+    { id: "convert_image", label: "Convert Image to Braille", icon: "image", description: "Turn images into readable braille.", page:'/(ImageToLatex)' },
+    { id: "document_braille", label: "Document to Braille", icon: "file-text", description: "Convert documents into braille format.",  page:'/(LatextoNemeth)' },
+    { id: "recordings", label: "Recordings", icon: "microphone", description: "Access and manage audio recordings.",  page:'/(ImageToLatex)' },
+    { id: "text_braille", label: "Text to Braille", icon: "font", description: "Translate written text into braille." ,  page:'/(ImageToLatex)'},
+    { id: "braille_text", label: "Braille to Text", icon: "braille", description: "Convert braille back into readable text." ,  page:'/(BrailleToLatex)'},
   ];
 
   const theme = darkMode ? Colors.dark : Colors.light;
@@ -121,7 +121,7 @@ const Home = () => {
     <View style={[styles.container, { backgroundColor: theme.background }]}>
       <Text style={styles.welcomeText}>Welcome, Students! 👋</Text>
       <Text style={styles.subText}>Easily convert text, images, and documents into braille. Select an option below to get started.</Text>
-      <Link href="/(SplashScreen)" asChild>
+      <Link href="/(auth)/(login)/page" asChild>
         <Pressable style={styles.logo} onPress={() => setDarkMode(!darkMode)}>
           <FontAwesome name="angle-left" size={50} color={theme.text} />
         </Pressable>
@@ -132,9 +132,10 @@ const Home = () => {
       <ScrollView style={styles.scrollContainer}>
         <View style={styles.optionsContainer}>
           {options.map((option) => (
+            <Link key={option.id} href={option.page}  style={[styles.option, { borderColor: theme.btnBorder, backgroundColor: selectedOption === option.id ? theme.tint : "transparent" }]} asChild>
             <Pressable
-              key={option.id}
-              style={[styles.option, { borderColor: theme.btnBorder, backgroundColor: selectedOption === option.id ? theme.tint : "transparent" }]}
+              
+             
               onPress={() => setSelectedOption(option.id)}
             >
               <FontAwesome
@@ -149,6 +150,7 @@ const Home = () => {
               </Text>
               <Text style={styles.optionDescription}>{option.description}</Text>
             </Pressable>
+            </Link>
           ))}
         </View>
       

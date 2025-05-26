@@ -1,4 +1,4 @@
-import React, { useEffect, useState,useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   Text,
@@ -67,7 +67,6 @@ const App = () => {
     }, [])
   );
 
-
   const replayAudio = async () => {
     if (sound) {
       if (isPlaying) {
@@ -107,18 +106,14 @@ const App = () => {
     },
     replayButton: {
       position: "absolute",
-      bottom: 30,
-      right: 30,
-      width: 70,
-      height: 70,
-      borderRadius: 35,
+      bottom: 20,
+      right: 0,
+      width: 100,
+      height: 100,
+      borderRadius: 100,
       backgroundColor: "#F6EC1C",
       justifyContent: "center",
       alignItems: "center",
-      shadowColor: "#000",
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
     },
     text: {
       color: theme.text,
@@ -129,6 +124,7 @@ const App = () => {
       padding: 25,
       borderRadius: 10,
       width: "75%",
+      paddingVertical: 40,
       alignItems: "center",
       marginVertical: 10,
     },
@@ -139,6 +135,7 @@ const App = () => {
       padding: 25,
       borderRadius: 10,
       width: "75%",
+      paddingVertical: 40,
       alignItems: "center",
       marginVertical: 10,
     },
@@ -147,7 +144,7 @@ const App = () => {
       fontSize: 23,
       fontFamily: "PoppinsBold",
     },
-  }); 
+  });
 
   return (
     <GestureHandlerRootView>
@@ -160,7 +157,7 @@ const App = () => {
           >
             <Feather
               name={darkMode ? "sun" : "moon"}
-              size={40}
+              size={60}
               color={theme.text}
             />
           </Pressable>
