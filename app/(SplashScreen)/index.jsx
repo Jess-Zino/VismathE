@@ -141,7 +141,7 @@ const App = () => {
     },
     buttonText: {
       color: theme.btnColor,
-      fontSize: 23,
+      fontSize: 25,
       fontFamily: "PoppinsBold",
     },
   });

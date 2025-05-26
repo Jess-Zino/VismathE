@@ -151,7 +151,6 @@ const [sound, setSound] = useState(null);
       paddingVertical: 30,
       backgroundColor: theme.tint,
       borderWidth: 3,
-      borderColor: theme.btnBorder,
       marginTop: 20,
     },
     buttonText: {
@@ -189,7 +188,6 @@ const [sound, setSound] = useState(null);
       paddingVertical: 25,
       backgroundColor: theme.tint,
       borderWidth: 3,
-      borderColor: theme.btnBorder,
       marginTop: 20,
     },
     logo: {

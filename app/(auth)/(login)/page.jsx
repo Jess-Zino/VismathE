@@ -84,7 +84,7 @@ const Login = () => {
       justifyContent: "center",
     },
     optionText: {
-      fontSize: 21,
+      fontSize: 29,
       color: "#00",
       fontFamily: "PoppinsBlack",
     },
@@ -94,12 +94,12 @@ const Login = () => {
       fontFamily: "PoppinsMedium",
     },
     input: {
-      height: 75,
+      height: 90,
       borderWidth: 3,
       borderRadius: 10,
       paddingHorizontal: 10,
       marginBottom:30,
-      fontSize: 20,
+      fontSize: 25,
       fontFamily: "PoppinsMedium",
     },
 
@@ -117,7 +117,7 @@ const Login = () => {
     },
     buttonText: {
       color: "#FFFFFF",
-      fontSize: 22,
+      fontSize: 29,
       fontWeight: "600",
       fontFamily: "PoppinsBold",
     },
@@ -157,7 +157,7 @@ const Login = () => {
                 style={[styles.option,{borderWidth:3, borderColor:theme.btnBorder}, selectedOption === option.id && { backgroundColor: theme.tint , borderColor:theme.tint}]}
                 onPress={() => setSelectedOption(option.id)}
               >
-                <MaterialIcons name={option.icon} size={50} color={theme.icon} />
+                <MaterialIcons name={option.icon} size={60} color={theme.icon} />
                 <Text style={[styles.optionText, { color: selectedOption === option.id ? theme.btnColor : theme.text }]}>
                   {option.label}
                 </Text>
@@ -207,7 +207,7 @@ const Login = () => {
 
           <Link href="/(home)/page" asChild>
             <Pressable style={styles.logbutton}>
-              <Text style={[styles.buttonText, { color: darkMode ? "#fff" : "#000" }]}>Login</Text>
+              <Text style={[styles.buttonText, { color: "#000"}]}>Login</Text>
             </Pressable>
           </Link>
         </View>
