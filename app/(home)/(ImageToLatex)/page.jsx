@@ -31,7 +31,7 @@ export default function InferenceScreen() {
   const [imageUri, setImageUri] = useState(null);
   const [showCamera, setShowCamera] = useState(true);
   const [darkMode, setDarkMode] = useState(true);
-  const [nemeth , setNemeth] = useState("")
+  const [nemeth, setNemeth] = useState("");
   const cameraRef = useRef(null);
   const wsRef = useRef(null);
   const { width } = useWindowDimensions();
@@ -59,7 +59,7 @@ export default function InferenceScreen() {
     },
     button: {
       width: "70%",
-      paddingVertical: 20,
+      paddingVertical: 30,
       borderRadius: 10,
       alignItems: "center",
       justifyContent: "center",
@@ -100,7 +100,7 @@ export default function InferenceScreen() {
 
   // WebSocket connection
   useEffect(() => {
-    const socket = new WebSocket("ws://172.16.172.39:8000/ws/img/infer");
+    const socket = new WebSocket("ws://192.168.137.1:8000/ws/img/infer");
 
     socket.onopen = () => {
       console.log("✅ WebSocket connected");
@@ -111,7 +111,7 @@ export default function InferenceScreen() {
       const data = JSON.parse(event.data);
       console.log("📩 Message from server:", data);
       setLatexOutput(data.latex);
-      setNemeth(data.nemeth)
+      setNemeth(data.nemeth);
       Speech.speak(data.spoken_text, {
         language: "en",
         rate: 0.9,
@@ -210,17 +210,30 @@ export default function InferenceScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container} {...panResponder.panHandlers}>
+    <ScrollView
+      contentContainerStyle={styles.container}
+      {...panResponder.panHandlers}
+    >
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()}>
-          <FontAwesome name="angle-left" size={60} color={theme.text} />
+        <Pressable
+          accessible={true}
+          accessibilityLabel="Toggle Dark Mode"
+          accessibilityRole="switch"
+          hitSlop={{ top: 20, bottom: 20, left: 20, right: 20 }}
+          onPress={() => setDarkMode(!darkMode)}
+        >
+          <FontAwesome name={darkMode ? "moon-o" : "sun-o"} size={40} />
         </Pressable>
 
         <Text style={styles.title}>Image to LaTeX</Text>
 
         <Pressable onPress={() => setDarkMode(!darkMode)}>
-          <FontAwesome name={darkMode ? "moon-o" : "sun-o"} size={40} color={theme.text} />
+          <FontAwesome
+            name={darkMode ? "moon-o" : "sun-o"}
+            size={40}
+            color={theme.text}
+          />
         </Pressable>
       </View>
 
@@ -258,11 +271,22 @@ export default function InferenceScreen() {
 
             {!loading && latexOutput !== "" && (
               <View>
-<Text style={{ fontFamily: 'monospace', fontSize: 24, color: theme.text }}>
-  {nemeth}
-</Text>
-
-              <KaTeXView latex={latexOutput} darkMode={theme} />
+                <Text
+                  style={{
+                    fontFamily: "monospace",
+                    fontSize: 24,
+                    color: theme.text,
+                  }}
+                >
+                  {nemeth}
+                </Text>
+                <View
+                  accessible={true}
+                  accessibilityLabel={`Math Output: ${nemeth}`}
+                  accessibilityRole="text"
+                >
+                  <KaTeXView latex={latexOutput} darkMode={theme} />
+                </View>
               </View>
             )}
           </>
@@ -271,7 +295,10 @@ export default function InferenceScreen() {
         {/* Capture */}
         <Pressable
           onPress={takePicture}
-          style={[styles.button, { backgroundColor: theme.tint, borderColor: theme.tint }]}
+          style={[
+            styles.button,
+            { backgroundColor: theme.tint, borderColor: theme.tint },
+          ]}
         >
           <FontAwesome name="camera" size={30} color={theme.text} />
         </Pressable>
@@ -279,7 +306,10 @@ export default function InferenceScreen() {
         {/* Pick from gallery */}
         <Pressable
           onPress={pickImage}
-          style={[styles.button, { backgroundColor: theme.tint, borderColor: theme.tint }]}
+          style={[
+            styles.button,
+            { backgroundColor: theme.tint, borderColor: theme.tint },
+          ]}
         >
           <Text style={styles.buttonText}>Pick Image</Text>
         </Pressable>

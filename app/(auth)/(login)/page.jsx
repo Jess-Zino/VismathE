@@ -1,16 +1,14 @@
 import React, { useState } from "react";
-import {
-  TextInput,
-  View,
-  Text,
-  StyleSheet,
-  Pressable,
-} from "react-native";
+import { TextInput, View, Text, StyleSheet, Pressable } from "react-native";
 import { Link } from "expo-router";
 import { Colors } from "../../../constants/Colors";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
-import { GestureHandlerRootView, PanGestureHandler } from "react-native-gesture-handler";
+import {
+  GestureHandlerRootView,
+  PanGestureHandler,
+} from "react-native-gesture-handler";
 import * as SecureStore from "expo-secure-store";
+import * as LocalAuthentication from "expo-local-authentication";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -38,6 +36,36 @@ const Login = () => {
     if (savedEmail) setEmail(savedEmail);
     if (savedPassword) setPassword(savedPassword);
   };
+  const checkBiometric = async () => {
+    const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    const supportedTypes =
+      await LocalAuthentication.supportedAuthenticationTypesAsync();
+    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+
+    console.log({ hasHardware, supportedTypes, isEnrolled });
+  };
+  const handleBiometricAuth = async () => {
+    const hasHardware = await LocalAuthentication.hasHardwareAsync();
+    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
+
+    if (!hasHardware || !isEnrolled) {
+      alert("Biometric authentication is not available on this device.");
+      return;
+    }
+
+    const result = await LocalAuthentication.authenticateAsync({
+      promptMessage: "Authenticate with Face ID",
+      fallbackLabel: "Enter Password",
+      disableDeviceFallback: false,
+    });
+
+    if (result.success) {
+      // navigate or mark auth as complete
+      alert("Authentication successful ✅");
+    } else {
+      alert("Authentication failed ❌");
+    }
+  };
 
   React.useEffect(() => {
     loadCredentials();
@@ -58,13 +86,19 @@ const Login = () => {
       padding: 10,
       borderRadius: 20,
     },
-    toggleButton: {
+    backButton: {
       position: "absolute",
       top: 25,
       right: 30,
       borderRadius: 20,
     },
-
+toggleButton: {
+      position: "absolute",
+      top: 40,
+      right: 20,
+      padding: 10,
+      borderRadius: 20,
+    },
     optionsContainer: {
       flexDirection: "row",
       flexWrap: "wrap", // Enables wrapping to the next line
@@ -98,18 +132,18 @@ const Login = () => {
       borderWidth: 3,
       borderRadius: 10,
       paddingHorizontal: 10,
-      marginBottom:30,
+      marginBottom: 30,
       fontSize: 25,
       fontFamily: "PoppinsMedium",
     },
 
     output: {
       marginTop: 20,
-      fontSize: 18,
+      fontSize: 27,
       fontWeight: "bold",
     },
     button: {
-      padding: 15,
+      padding: 35,
       borderRadius: 10,
       marginTop: 20,
       alignItems: "center",
@@ -136,29 +170,79 @@ const Login = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PanGestureHandler onGestureEvent={handleGesture}>
-        <View style={[styles.container, { backgroundColor: theme.background }]}> 
-        <Link href="/(SplashScreen)" asChild>
-        <Pressable style={styles.logo} onPress={() => setDarkMode(!darkMode)}>
-          <FontAwesome
-            name="angle-left" // Use FontAwesome icon names
-            size={60}
-            color={theme.text}
-          />
-        </Pressable>
-      </Link>
-          <Pressable style={styles.toggleButton} onPress={() => setDarkMode(!darkMode)}>
-            <FontAwesome name={darkMode ? "moon-o" : "sun-o"} size={40} color={theme.text} />
+        <View style={[styles.container, { backgroundColor: theme.background }]}>
+          <Link href="/(SplashScreen)" asChild>
+            <Pressable
+              style={styles.logo}
+              onPress={() => setDarkMode(!darkMode)}
+            >
+              <FontAwesome
+                name="angle-left" // Use FontAwesome icon names
+                size={60}
+                color={theme.text}
+              />
+            </Pressable>
+          </Link>
+          <Pressable
+            style={styles.logo}
+            onPress={() => setDarkMode(!darkMode)}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
+            accessible
+          >
+            <FontAwesome
+              name="angle-left"
+              size={60}
+              color={theme.text}
+              accessibilityElementsHidden // hides from screen reader since the Pressable already describes the button
+            />
           </Pressable>
-
+ <Pressable
+            style={styles.toggleButton}
+            onPress={() => setDarkMode(!darkMode)}
+            accessible={true}
+            accessibilityLabel="Toggle dark or light mode"
+            accessibilityHint="Double tap to switch between dark and light mode"
+            accessibilityRole="button"
+          >
+            <Feather
+              name={darkMode ? "sun" : "moon"}
+              size={60}
+              color={theme.text}
+            />
+          </Pressable>
           <View style={styles.optionsContainer}>
             {options.map((option) => (
               <Pressable
                 key={option.id}
-                style={[styles.option,{borderWidth:3, borderColor:theme.btnBorder}, selectedOption === option.id && { backgroundColor: theme.tint , borderColor:theme.tint}]}
+                style={[
+                  styles.option,
+                  { borderWidth: 3, borderColor: theme.btnBorder },
+                  selectedOption === option.id && {
+                    backgroundColor: theme.tint,
+                    borderColor: theme.tint,
+                  },
+                ]}
                 onPress={() => setSelectedOption(option.id)}
               >
-                <MaterialIcons name={option.icon} size={60} color={theme.icon} />
-                <Text style={[styles.optionText, { color: selectedOption === option.id ? theme.btnColor : theme.text }]}>
+                <MaterialIcons
+                  name={option.icon}
+                  size={90}
+                  color={
+                    selectedOption === option.id ? theme.btnColor : theme.text
+                  }
+                />
+                <Text
+                  style={[
+                    styles.optionText,
+                    {
+                      color:
+                        selectedOption === option.id
+                          ? theme.btnColor
+                          : theme.text,
+                    },
+                  ]}
+                >
                   {option.label}
                 </Text>
               </Pressable>
@@ -168,7 +252,14 @@ const Login = () => {
           <View style={{ width: "90%" }}>
             <Text style={[styles.label, { color: theme.text }]}>Email:</Text>
             <TextInput
-              style={[styles.input, { backgroundColor: theme.background, color: theme.buttonText, borderColor: theme.tint }]}
+              style={[
+                styles.input,
+                {
+                  backgroundColor: theme.background,
+                  color: theme.buttonText,
+                  borderColor: theme.tint,
+                },
+              ]}
               placeholder="Enter your email..."
               placeholderTextColor={theme.placeholder}
               value={email}
@@ -178,9 +269,18 @@ const Login = () => {
 
             {selectedOption === "password" && (
               <>
-                <Text style={[styles.label, { color: theme.text }]}>Password:</Text>
+                <Text style={[styles.label, { color: theme.text }]}>
+                  Password:
+                </Text>
                 <TextInput
-                  style={[styles.input, { backgroundColor: theme.background, color: theme.buttonText, borderColor: theme.tint }]}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: theme.background,
+                      color: theme.buttonText,
+                      borderColor: theme.tint,
+                    },
+                  ]}
                   placeholder="Enter your password..."
                   placeholderTextColor={theme.placeholder}
                   value={password}
@@ -195,7 +295,14 @@ const Login = () => {
               <>
                 <Text style={[styles.label, { color: theme.text }]}>Pin:</Text>
                 <TextInput
-                  style={[styles.input, { backgroundColor: theme.background, color: theme.buttonText, borderColor: theme.tint }]}
+                  style={[
+                    styles.input,
+                    {
+                      backgroundColor: theme.background,
+                      color: theme.buttonText,
+                      borderColor: theme.tint,
+                    },
+                  ]}
                   placeholder="Enter your pin"
                   placeholderTextColor={theme.placeholder}
                   keyboardType="numeric"
@@ -204,10 +311,17 @@ const Login = () => {
               </>
             )}
           </View>
+          {selectedOption === "face" && (
+            <Pressable onPress={checkBiometric} style={styles.logbutton}>
+              <Text style={[styles.buttonText, { color: "#000" }]}>
+                Use Face ID
+              </Text>
+            </Pressable>
+          )}
 
           <Link href="/(home)/page" asChild>
             <Pressable style={styles.logbutton}>
-              <Text style={[styles.buttonText, { color: "#000"}]}>Login</Text>
+              <Text style={[styles.buttonText, { color: "#000" }]}>Login</Text>
             </Pressable>
           </Link>
         </View>
@@ -215,6 +329,5 @@ const Login = () => {
     </GestureHandlerRootView>
   );
 };
-
 
 export default Login;

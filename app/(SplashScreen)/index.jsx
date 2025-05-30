@@ -150,10 +150,19 @@ const App = () => {
     <GestureHandlerRootView>
       <PanGestureHandler onGestureEvent={onGestureEvent}>
         <View style={[styles.container, { backgroundColor: theme.background }]}>
-          <Image source={image} resizeMode="contain" />
+          <Image
+            source={image}
+            resizeMode="contain"
+            accessible={true}
+            accessibilityLabel="VisMath logo"
+          />
           <Pressable
             style={styles.toggleButton}
             onPress={() => setDarkMode(!darkMode)}
+            accessible={true}
+            accessibilityLabel="Toggle dark or light mode"
+            accessibilityHint="Double tap to switch between dark and light mode"
+            accessibilityRole="button"
           >
             <Feather
               name={darkMode ? "sun" : "moon"}
@@ -161,32 +170,59 @@ const App = () => {
               color={theme.text}
             />
           </Pressable>
+
           <Text
             style={[styles.text, { fontSize: getFontSize(), letterSpacing: 2 }]}
+            accessible={true}
+            accessibilityRole="header"
+            accessibilityLabel="Welcome to VisMath"
           >
             Welcome to VisMath
           </Text>
           <View style={{ width: "100%", alignItems: "center" }}>
-            <Link href="/(auth)/(login)/page" asChild>
-              <Pressable style={styles.button}>
-                <Text style={styles.buttonText}>Login</Text>
-              </Pressable>
-            </Link>
-            <Link href="/(auth)/(Register)/page" asChild>
-              <Pressable style={styles.regbutton}>
-                <Text
-                  style={[
-                    styles.buttonText,
-                    { color: darkMode ? "#fff" : "#000" },
-                  ]}
-                >
-                  Register
-                </Text>
-              </Pressable>
-            </Link>
+            <Pressable
+              onPress={() => {
+                router.navigate("/(auth)/(login)/page");
+              }}
+              style={styles.button}
+              accessible={true}
+              accessibilityLabel="Login"
+              accessibilityHint="Navigates to the login page"
+              accessibilityRole="button"
+            >
+              <Text style={styles.buttonText}>Login</Text>
+            </Pressable>
+
+            <Pressable
+              style={styles.regbutton}
+              onPress={() => {
+                router.navigate("/(auth)/(Register)/page");
+              }}
+              accessible={true}
+              accessibilityLabel="Register"
+              accessibilityHint="Navigates to the registration page"
+              accessibilityRole="button"
+            >
+              <Text
+                style={[
+                  styles.buttonText,
+                  { color: darkMode ? "#fff" : "#000" },
+                ]}
+              >
+                Register
+              </Text>
+            </Pressable>
           </View>
           {/* Replay Button */}
-          <Pressable style={styles.replayButton} onPress={replayAudio}>
+          <Pressable
+            style={styles.replayButton}
+            onPress={replayAudio}
+            accessible={true}
+            accessibilityLabel={
+              isPlaying ? "Pause welcome audio" : "Replay welcome audio"
+            }
+            accessibilityRole="button"
+          >
             <Ionicons
               name={isPlaying ? "pause" : "play"}
               size={32}

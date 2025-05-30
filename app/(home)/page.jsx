@@ -1,3 +1,4 @@
+import React, { useState, useRef } from "react";
 import {
   View,
   Text,
@@ -5,32 +6,91 @@ import {
   Pressable,
   useWindowDimensions,
   FlatList,
-  AccessibilityInfo,
 } from "react-native";
-import React, { useState } from "react";
 import { Link } from "expo-router";
 import { Colors } from "../../constants/Colors";
 import { FontAwesome } from "@expo/vector-icons";
+import { Audio } from "expo-av";
 
 const Home = () => {
   const [selectedOption, setSelectedOption] = useState(null);
   const [darkMode, setDarkMode] = useState(true);
   const { width, height } = useWindowDimensions();
 
+  // Adjust the slide width (for example, 80% of device width)
+  const slideWidth = width * 0.75;
+
+  // Define your options array with an audio property (link to your audio file)
   const options = [
-    { id: "convert_image", label: "Convert Image to Braille", icon: "image", description: "Turn images into readable braille.", page: "/(ImageToLatex)" },
-    { id: "document_braille", label: "Document to Braille", icon: "file-text", description: "Convert documents into braille format.", page: "/(LatextoNemeth)" },
-    { id: "recordings", label: "Recordings", icon: "microphone", description: "Access and manage audio recordings.", page: "/(ImageToLatex)" },
-    { id: "text_braille", label: "Text to Braille", icon: "font", description: "Translate written text into braille.", page: "/(ImageToLatex)" },
-    { id: "braille_text", label: "Braille to Text", icon: "braille", description: "Convert braille back into readable text.", page: "/(BrailleToLatex)" },
+    {
+      id: "convert_image",
+      label: "Convert Image to Braille",
+      icon: "image",
+      description: "Turn images into readable braille.",
+      page: "/(ImageToLatex)",
+      audio: "https://example.com/audio/convert_image.mp3",
+    },
+    {
+      id: "document_braille",
+      label: "Document to Braille",
+      icon: "file-text",
+      description: "Convert documents into braille format.",
+      page: "/(LatextoNemeth)",
+      audio: "https://example.com/audio/document_braille.mp3",
+    },
+    {
+      id: "recordings",
+      label: "Recordings",
+      icon: "microphone",
+      description: "Access and manage audio recordings.",
+      page: "/(SpeechToLatex)",
+      audio: "https://example.com/audio/recordings.mp3",
+    },
+    {
+      id: "text_braille",
+      label: "Text to Braille",
+      icon: "font",
+      description: "Translate written text into braille.",
+      page: "/(ImageToLatex)",
+      audio: "https://example.com/audio/text_braille.mp3",
+    },
+    {
+      id: "braille_text",
+      label: "Braille to Text",
+      icon: "braille",
+      description: "Convert braille back into readable text.",
+      page: "/(BrailleToLatex)",
+      audio: "https://example.com/audio/braille_text.mp3",
+    },
   ];
 
   const theme = darkMode ? Colors.dark : Colors.light;
 
-  const handleViewableItemsChanged = React.useRef(({ viewableItems }) => {
+  // Ref to store the current sound so we can unload it when a new slide comes into view.
+  const currentSound = useRef(null);
+
+  // Function to play audio for the given URL
+  const playAudio = async (audioUrl) => {
+    try {
+      if (currentSound.current !== null) {
+        await currentSound.current.unloadAsync();
+        currentSound.current = null;
+      }
+      const { sound } = await Audio.Sound.createAsync({ uri: audioUrl });
+      currentSound.current = sound;
+      await sound.playAsync();
+    } catch (error) {
+      console.error("Error playing audio:", error);
+    }
+  };
+
+  // Called when the viewable items change so we can trigger the audio feedback.
+  const handleViewableItemsChanged = useRef(({ viewableItems }) => {
     if (viewableItems.length > 0) {
       const currentItem = viewableItems[0].item;
-      AccessibilityInfo.announceForAccessibility(`Selected ${currentItem.label}`);
+      if (currentItem.audio) {
+        playAudio(currentItem.audio);
+      }
     }
   });
 
@@ -41,22 +101,12 @@ const Home = () => {
   const styles = StyleSheet.create({
     container: {
       flex: 1,
-      paddingTop:30,
       backgroundColor: theme.background,
     },
     header: {
       paddingTop: 90,
       paddingHorizontal: 30,
       alignItems: "center",
-    },
-    pageText: {
-      fontSize: 36,
-      color: theme.text,
-      marginBottom: 10,
-      textAlign: "center",
-      fontFamily: "PoppinsBold",
-      position:"absolute",
-      top:20,
     },
     welcomeText: {
       fontSize: 36,
@@ -69,7 +119,7 @@ const Home = () => {
       fontSize: 22,
       color: theme.text,
       textAlign: "center",
-      marginBottom: 50,
+      marginBottom: 20,
       fontFamily: "PoppinsMedium",
     },
     logo: {
@@ -85,15 +135,14 @@ const Home = () => {
       padding: 10,
     },
     optionContainer: {
-      width,
-      height,
-      justifyContent: "center",
+      width, // full available width for container (for header/footer spacing to work)
       alignItems: "center",
-      padding: 20,
+      justifyContent: "center",
     },
     optionCard: {
-      width: "95%",
-      height: "80%",
+      width: slideWidth,
+      // Increase the height (if needed) so that it fills at least half of the screen
+      height: Math.max(height * 0.7, 300),
       justifyContent: "center",
       alignItems: "center",
       borderRadius: 20,
@@ -101,7 +150,7 @@ const Home = () => {
       padding: 20,
     },
     optionText: {
-      fontSize: 36,
+      fontSize: 36, // Bigger title
       textAlign: "center",
       fontFamily: "PoppinsBold",
       marginTop: 20,
@@ -116,14 +165,15 @@ const Home = () => {
 
   return (
     <View style={styles.container}>
+      {/* Header Section */}
       <View style={styles.header}>
-        <Text style={styles.pageText}>Home</Text>
-        <Text style={styles.welcomeText}>Welcome👋 !</Text>
+        <Text style={styles.welcomeText}>Welcome, Students! 👋</Text>
         <Text style={styles.subText}>
-          Swipe to explore. Audio feedback tells you where you are.
+          Swipe to explore. Audio will notify you when a new option is in view.
         </Text>
       </View>
 
+      {/* Navigation Buttons */}
       <Link href="/(auth)/(login)/page" asChild>
         <Pressable style={styles.logo} onPress={() => setDarkMode(!darkMode)}>
           <FontAwesome name="angle-left" size={50} color={theme.text} />
@@ -134,53 +184,53 @@ const Home = () => {
         <FontAwesome name={darkMode ? "moon-o" : "sun-o"} size={36} color={theme.text} />
       </Pressable>
 
+      {/* FlatList for the swipeable options */}
       <FlatList
         data={options}
         keyExtractor={(item) => item.id}
         horizontal
         pagingEnabled
         snapToAlignment="center"
-        showsHorizontalScrollIndicator={false}
+        showsHorizontalScrollIndicator={true}
         onViewableItemsChanged={handleViewableItemsChanged.current}
         viewabilityConfig={viewabilityConfig}
+        // ListHeaderComponent and ListFooterComponent add spacing so the first and last slides are centered.
+        ListHeaderComponent={<View style={{ width: (width - slideWidth) / 2 }} />}
+        ListFooterComponent={<View style={{ width: (width - slideWidth) / 2 }} />}
         renderItem={({ item }) => (
-          <Link href={item.page} asChild>
-            <Pressable
-              style={[
-                styles.optionContainer,
-              ]}
-              onPress={() => setSelectedOption(item.id)}
-            >
-              <View
-                style={[
-                  styles.optionCard,
-                  {
-                    backgroundColor: selectedOption === item.id ? theme.tint : "transparent",
-                    borderColor: theme.btnBorder,
-                  },
-                ]}
-              >
-                <FontAwesome
-                  name={item.icon}
-                  size={120}
-                  color={selectedOption === item.id ? theme.btnColor : theme.icon}
-                />
-                <Text
+          <View style={styles.optionContainer}>
+            <Link href={item.page} asChild>
+              <Pressable onPress={() => setSelectedOption(item.id)}>
+                <View
                   style={[
-                    styles.optionText,
+                    styles.optionCard,
                     {
-                      color: selectedOption === item.id ? theme.btnColor : theme.text,
+                      backgroundColor:
+                        selectedOption === item.id ? theme.tint : "transparent",
+                      borderColor: theme.btnBorder,
                     },
                   ]}
                 >
-                  {item.label}
-                </Text>
-                <Text style={[styles.optionDescription, { color: theme.text }]}>
-                  {item.description}
-                </Text>
-              </View>
-            </Pressable>
-          </Link>
+                  <FontAwesome
+                    name={item.icon}
+                    size={120} // Bigger icon
+                    color={selectedOption === item.id ? theme.btnColor : theme.icon}
+                  />
+                  <Text
+                    style={[
+                      styles.optionText,
+                      { color: selectedOption === item.id ? theme.btnColor : theme.text },
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                  <Text style={[styles.optionDescription, { color: theme.text }]}>
+                    {item.description}
+                  </Text>
+                </View>
+              </Pressable>
+            </Link>
+          </View>
         )}
       />
     </View>

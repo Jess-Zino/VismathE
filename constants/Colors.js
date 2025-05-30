@@ -28,7 +28,7 @@ export const Colors = {
     icon: "#fff", // Light Blue Gray '#9BA1A6'
     tabIconDefault: '#4B5563', // Dark Gray for inactive icons
     tabIconSelected: tintColorDark, // Yellow for selected icons
-    buttonBackground: '#11181C', // Almost Black for buttons
+    buttonBackground: '#F6EC1C', // Almost Black for buttons
     buttonText: '#FACC15', // Yellow text on buttons
   },
 };

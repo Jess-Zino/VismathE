@@ -51,7 +51,9 @@
       ],
       "expo-speech-recognition",
       "expo-secure-store",
-      "onnxruntime-react-native"
+      "onnxruntime-react-native",
+      "expo-audio",
+      "expo-video"
     ],
     "experiments": {
       "typedRoutes": true
