@@ -41,6 +41,14 @@ const latexSymbols = [
   { id: '27', symbol: ']' },
   { id: '28', symbol: '{' },
   { id: '29', symbol: '}' },
+   { id: '30', symbol: '\\int ' },
+  { id: '31', symbol: ' dx' },
+  { id: '32', symbol: '\\frac{d}{dx} ' },
+  { id: '33', symbol: '\\sqrt{}' },
+  { id: '34', symbol: 'x^2' },
+  { id: '35', symbol: '\\frac{1}{x}' },
+  { id: '36', symbol: '\\sum ' },
+  { id: '37', symbol: '\\pi' },
 ];
 
 const numColumns = 6;

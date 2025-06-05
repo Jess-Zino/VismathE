@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { TextInput, View, Text, StyleSheet, Pressable } from "react-native";
-import { Link } from "expo-router";
+import { useRouter } from "expo-router";
 import { Colors } from "../../../constants/Colors";
-import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
+import { FontAwesome, MaterialIcons, Feather } from "@expo/vector-icons";
 import {
   GestureHandlerRootView,
   PanGestureHandler,
@@ -11,8 +11,10 @@ import * as SecureStore from "expo-secure-store";
 import * as LocalAuthentication from "expo-local-authentication";
 
 const Login = () => {
-  const [email, setEmail] = useState("");
+  const router = useRouter()
+  const [username, setusername] = useState("");
   const [password, setPassword] = useState("");
+  const [pin, setPin] = useState("");
   const [selectedOption, setSelectedOption] = useState("pin");
   const [darkMode, setDarkMode] = useState(true);
 
@@ -30,46 +32,61 @@ const Login = () => {
     }
   };
 
-  const loadCredentials = async () => {
-    const savedEmail = await SecureStore.getItemAsync("userEmail");
-    const savedPassword = await SecureStore.getItemAsync("userPassword");
-    if (savedEmail) setEmail(savedEmail);
-    if (savedPassword) setPassword(savedPassword);
-  };
-  const checkBiometric = async () => {
-    const hasHardware = await LocalAuthentication.hasHardwareAsync();
-    const supportedTypes =
-      await LocalAuthentication.supportedAuthenticationTypesAsync();
-    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-
-    console.log({ hasHardware, supportedTypes, isEnrolled });
-  };
-  const handleBiometricAuth = async () => {
-    const hasHardware = await LocalAuthentication.hasHardwareAsync();
-    const isEnrolled = await LocalAuthentication.isEnrolledAsync();
-
-    if (!hasHardware || !isEnrolled) {
-      alert("Biometric authentication is not available on this device.");
-      return;
-    }
-
-    const result = await LocalAuthentication.authenticateAsync({
-      promptMessage: "Authenticate with Face ID",
-      fallbackLabel: "Enter Password",
-      disableDeviceFallback: false,
-    });
-
-    if (result.success) {
-      // navigate or mark auth as complete
-      alert("Authentication successful ✅");
-    } else {
-      alert("Authentication failed ❌");
-    }
-  };
+  const socketRef = React.useRef(null);
 
   React.useEffect(() => {
-    loadCredentials();
+    socketRef.current = new WebSocket("ws://192.168.137.1:8000/auth/ws/login");
+
+    socketRef.current.onopen = () => {
+      console.log("WebSocket connected ✅");
+    };
+
+    socketRef.current.onclose = () => {
+      console.log("WebSocket disconnected ❌");
+    };
+
+    return () => {
+      socketRef.current.close();
+    };
   }, []);
+  const handleLogin = () => {
+    const loginPayload = {
+      type: "login",
+      username,
+      method: selectedOption,
+      password: selectedOption === "password" ? password : undefined,
+      pin: selectedOption === "pin" ? pin : undefined, // assuming pin and password share state
+    };
+
+    if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+      socketRef.current.send(JSON.stringify(loginPayload));
+    } else {
+      alert("Unable to connect to server.");
+    }
+  };
+
+  // Optional: Handle messages
+  React.useEffect(() => {
+    if (!socketRef.current) return;
+
+    socketRef.current.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+              console.log(data)
+
+      if (data.status === "success") {
+        SecureStore.setItemAsync("username", data.user.username);
+        SecureStore.setItemAsync("userToken", data.token);
+        setusername("");
+        setPin("");
+        setPassword("");
+        alert("Login Successful");
+        router.navigate("/(home)/page");
+      } else {
+        alert(data.message || "Login failed ❌");
+      }
+    };
+  }, [username, password, pin]);
+
   const styles = StyleSheet.create({
     container: {
       flex: 1,
@@ -92,7 +109,7 @@ const Login = () => {
       right: 30,
       borderRadius: 20,
     },
-toggleButton: {
+    toggleButton: {
       position: "absolute",
       top: 40,
       right: 20,
@@ -171,21 +188,16 @@ toggleButton: {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PanGestureHandler onGestureEvent={handleGesture}>
         <View style={[styles.container, { backgroundColor: theme.background }]}>
-          <Link href="/(SplashScreen)" asChild>
-            <Pressable
-              style={styles.logo}
-              onPress={() => setDarkMode(!darkMode)}
-            >
-              <FontAwesome
-                name="angle-left" // Use FontAwesome icon names
-                size={60}
-                color={theme.text}
-              />
-            </Pressable>
-          </Link>
+          <Pressable style={styles.logo} onPress={() => router.back()}>
+            <FontAwesome
+              name="angle-left" // Use FontAwesome icon names
+              size={60}
+              color={theme.text}
+            />
+          </Pressable>
           <Pressable
             style={styles.logo}
-            onPress={() => setDarkMode(!darkMode)}
+            onPress={() => router.navigate("/(SplashScreen)")}
             accessibilityLabel="Go back"
             accessibilityRole="button"
             accessible
@@ -197,7 +209,7 @@ toggleButton: {
               accessibilityElementsHidden // hides from screen reader since the Pressable already describes the button
             />
           </Pressable>
- <Pressable
+          <Pressable
             style={styles.toggleButton}
             onPress={() => setDarkMode(!darkMode)}
             accessible={true}
@@ -250,21 +262,21 @@ toggleButton: {
           </View>
 
           <View style={{ width: "90%" }}>
-            <Text style={[styles.label, { color: theme.text }]}>Email:</Text>
+            <Text style={[styles.label, { color: theme.text }]}>Username:</Text>
             <TextInput
               style={[
                 styles.input,
                 {
                   backgroundColor: theme.background,
-                  color: theme.buttonText,
+                  color: theme.text,
                   borderColor: theme.tint,
                 },
               ]}
-              placeholder="Enter your email..."
+              placeholder="Enter your username..."
               placeholderTextColor={theme.placeholder}
-              value={email}
-              onChangeText={setEmail}
-              autoComplete="email"
+              value={username}
+              onChangeText={setusername}
+              autoComplete="username"
             />
 
             {selectedOption === "password" && (
@@ -277,7 +289,7 @@ toggleButton: {
                     styles.input,
                     {
                       backgroundColor: theme.background,
-                      color: theme.buttonText,
+                      color: theme.text,
                       borderColor: theme.tint,
                     },
                   ]}
@@ -299,31 +311,27 @@ toggleButton: {
                     styles.input,
                     {
                       backgroundColor: theme.background,
-                      color: theme.buttonText,
+                      color: theme.text,
                       borderColor: theme.tint,
                     },
                   ]}
                   placeholder="Enter your pin"
                   placeholderTextColor={theme.placeholder}
                   keyboardType="numeric"
+                  onChangeText={setPin}
                   maxLength={6}
+                  
+                   secureTextEntry
+                  value={pin}
                 />
               </>
             )}
           </View>
-          {selectedOption === "face" && (
-            <Pressable onPress={checkBiometric} style={styles.logbutton}>
-              <Text style={[styles.buttonText, { color: "#000" }]}>
-                Use Face ID
-              </Text>
-            </Pressable>
-          )}
+       
 
-          <Link href="/(home)/page" asChild>
-            <Pressable style={styles.logbutton}>
-              <Text style={[styles.buttonText, { color: "#000" }]}>Login</Text>
-            </Pressable>
-          </Link>
+          <Pressable style={styles.logbutton} onPress={() => handleLogin()}>
+            <Text style={[styles.buttonText, { color: "#000" }]}>Login</Text>
+          </Pressable>
         </View>
       </PanGestureHandler>
     </GestureHandlerRootView>

@@ -1,5 +1,5 @@
 import { Slot } from "expo-router";
 
-export default function SpeechLayout() {
+export default function EquationLayout() {
     return <Slot/>
 }

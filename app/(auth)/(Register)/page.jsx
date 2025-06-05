@@ -1,4 +1,4 @@
-import { TextInput, View, Text, StyleSheet, Pressable } from "react-native";
+import { TextInput, View, Text, StyleSheet, Pressable, ActivityIndicator } from "react-native";
 import React, { useState, useEffect, useFocusEffect, useCallback } from "react";
 import { FontAwesome, MaterialIcons } from "@expo/vector-icons";
 import { Colors } from "../../../constants/Colors";
@@ -14,17 +14,17 @@ import * as SecureStore from "expo-secure-store";
 import { Link } from "expo-router"; // Ensure you're using expo-router
 
 const Register = () => {
-  const [Name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [pin, setPin] = useState("");
-  const [confirmPin, setConfirmPin] = useState("");
   const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const router = useRouter();
-const [sound, setSound] = useState(null);
+  const [sound, setSound] = useState(null);
+  const [socket, setSocket] = useState(null);
   const [error, setError] = useState("");
   const [darkMode, setDarkMode] = useState(true);
   const [selectedOption, setSelectedOption] = useState("password");
+  const router = useRouter();
 
   const theme = darkMode ? Colors.dark : Colors.light;
 
@@ -36,78 +36,102 @@ const [sound, setSound] = useState(null);
   const handleGesture = (event) => {
     if (event.nativeEvent.translationX < -50) {
       setSelectedOption("pin");
+      Speech.speak(`You selected pin}`);
     } else if (event.nativeEvent.translationX > 50) {
       setSelectedOption("password");
+      Speech.speak(`You selected Password }`);
     }
   };
 
   const loadCredentials = async () => {
     const savedEmail = await SecureStore.getItemAsync("userEmail");
+    const savedUsername = await SecureStore.getItemAsync("userName");
+
     const savedPassword = await SecureStore.getItemAsync("userPassword");
     if (savedEmail) setEmail(savedEmail);
+    if (savedUsername) setUsername(savedUsername);
     if (savedPassword) setPassword(savedPassword);
   };
- 
+
   useEffect(() => {
     loadCredentials();
+
+    const ws = new WebSocket("ws://192.168.137.1:8000/auth/ws/register");
+    ws.onopen = () => console.log("WebSocket connected.");
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === "register_success") {
+        Speech.speak("Registration successful");
+        alert("Registration successful!");
+        setName("");
+        setEmail("");
+        setUsername("");
+        setPin("");
+        setPassword("");
+        setError("");
+        setLoading(false);
+      } else if (data.type === "register_error") {
+        setError(data.detail || "Registration failed");
+        Speech.speak(data.detail || "Registration failed");
+        setLoading(false);
+      }
+    };
+    ws.onerror = (e) => {
+      console.error("WebSocket error:", e.message);
+      setError("WebSocket error occurred");
+      setLoading(false);
+    };
+    ws.onclose = () => {
+      console.log("WebSocket connection closed.");
+      setLoading(false);
+    };
+
+    setSocket(ws);
+
+    return () => {
+      ws.close();
+    };
   }, []);
 
-  const validatePin = (value) => {
-    return /^(\d{4}|\d{6})$/.test(value);
-  };
+  const validatePin = (value) => /^(\d{4}|\d{6})$/.test(value);
 
   const handleRegister = async () => {
+    if (!email.trim()) {
+      setError("Email is required");
+      Speech.speak("Email is required");
+      return;
+    }
+    if (!username.trim()) {
+      setError("Username is required");
+      Speech.speak("Username is required");
+      return;
+    }
+  if (selectedOption === "password") {
     if (password.length < 6) {
       setError("Password must be at least 6 characters long");
+      Speech.speak("Password must be at least six characters long");
       return;
     }
+  } else if (selectedOption === "pin") {
     if (!validatePin(pin)) {
       setError("PIN must be 4 or 6 digits long.");
+      Speech.speak("PIN must be four or six digits long");
       return;
     }
-    if (pin !== confirmPin) {
-      setError("PINs do not match");
-      return;
-    }
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-
+  }
     setError("");
-
+    setLoading(true);
     const payload = {
-      name: Name,
+      username,
       email,
       password,
       pin,
     };
 
-    try {
-      const response = await fetch(
-        "http://localhost:8000/api/v1/auth/register",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      const data = await response.json();
-
-      if (response.ok) {
-        alert("Registration successful!");
-        setName("");
-        setEmail("");
-        setPin("");
-        setConfirmPin("");
-        setPassword("");
-        setConfirmPassword("");
-      } else {
-        setError(data.detail);
-      }
-    } catch (error) {
-      setError("An error occurred. Please try again.");
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(payload));
+    } else {
+      setError("WebSocket not connected. Please try again later.");
     }
   };
 
@@ -116,7 +140,7 @@ const [sound, setSound] = useState(null);
       flex: 1,
       justifyContent: "space-evenly",
       padding: 30,
-      paddingTop:90,
+      paddingTop: 90,
       backgroundColor: theme.background,
     },
     toggleButton: {
@@ -139,10 +163,12 @@ const [sound, setSound] = useState(null);
       fontSize: 26,
       fontFamily: "PoppinsMedium",
       backgroundColor: theme.background,
-      color: theme.buttonText,
+      color: theme.text,
       borderColor: theme.tint,
       marginBottom: 30,
+     
     },
+   
     button: {
       padding: 20,
       borderRadius: 10,
@@ -172,7 +198,7 @@ const [sound, setSound] = useState(null);
       padding: 15,
       alignItems: "center",
       borderRadius: 10,
-      paddingTop:40,
+      paddingTop: 40,
       width: "45%",
     },
     optionText: {
@@ -199,7 +225,7 @@ const [sound, setSound] = useState(null);
       position: "absolute",
       top: 40,
       left: "40%",
-        fontSize: 35,
+      fontSize: 35,
       marginBottom: 5,
       fontFamily: "PoppinsBold",
       color: theme.text,
@@ -210,10 +236,15 @@ const [sound, setSound] = useState(null);
     <GestureHandlerRootView style={{ flex: 1 }}>
       <PanGestureHandler onGestureEvent={handleGesture}>
         <View style={styles.container}>
-           <Pressable style={styles.logo} onPress={ ()=>{router.navigate("/(SplashScreen)")}}>
-              <FontAwesome name="angle-left" size={70} color={theme.text} />
-            </Pressable>
-    <Text style={styles.pageName}>Register</Text>
+          <Pressable
+            style={styles.logo}
+            onPress={() => {
+              router.navigate("/(SplashScreen)");
+            }}
+          >
+            <FontAwesome name="angle-left" size={70} color={theme.text} />
+          </Pressable>
+          <Text style={styles.pageName}>Register</Text>
           <Pressable
             style={styles.toggleButton}
             onPress={() => setDarkMode(!darkMode)}
@@ -237,8 +268,8 @@ const [sound, setSound] = useState(null);
                     borderColor: theme.tint,
                   },
                 ]}
-                onPress={() => {setSelectedOption(option.id)
-                   Speech.speak(`You selected ${optionId === "pin" ? "PIN" : "Password"}`);
+                onPress={() => {
+                  setSelectedOption(option.id);
                 }}
               >
                 <MaterialIcons
@@ -264,84 +295,66 @@ const [sound, setSound] = useState(null);
           </View>
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
-            <View>
-          <Text style={styles.label}>Email:</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter your email..."
-            placeholderTextColor={theme.placeholder}
-            value={email}
-            onChangeText={setEmail}
-            autoComplete="email"
-          />
+          <View>
+            <Text style={styles.label}>Email:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your email..."
+              placeholderTextColor={theme.placeholder}
+              value={email}
+              onChangeText={setEmail}
+              autoComplete="email"
+            />
 
-          {selectedOption === "password" && (
-            <View>
-              <Text style={styles.label}>Password:</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your password..."
-                placeholderTextColor={theme.placeholder}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoComplete="password"
-              />
+            <Text style={styles.label}>Username:</Text>
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your Username..."
+              placeholderTextColor={theme.placeholder}
+              value={username}
+              onChangeText={setUsername}
+              autoComplete="username"
+            />
+            {selectedOption === "password" && (
+              <View>
+                <Text style={styles.label}>Password:</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your password..."
+                  placeholderTextColor={theme.placeholder}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  autoComplete="password"
+                />
+              </View>
+            )}
 
-              <Text style={styles.label}>Confirm Password:</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Confirm your password..."
-                placeholderTextColor={theme.placeholder}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry
-              />
-            </View>
-          )}
-
-          {selectedOption === "pin" && (
-            <View>
-              <Text style={styles.label}>Pin:</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your pin"
-                placeholderTextColor={theme.placeholder}
-                keyboardType="numeric"
-                maxLength={6}
-                value={pin}
-                onChangeText={setPin}
-              />
-
-              <Text style={styles.label}>Confirm Pin:</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="Confirm your pin"
-                placeholderTextColor={theme.placeholder}
-                keyboardType="numeric"
-                maxLength={6}
-                value={confirmPin}
-                onChangeText={setConfirmPin}
-              />
-            </View>
-          )}
-           </View>
-  <View>
-   
-          <Pressable style={styles.button} onPress={handleRegister}>
-            <Text style={styles.buttonText}>Register</Text>
-          </Pressable>
-
-            <Pressable style={styles.logbutton}  onPress={() => router.navigate("/(auth)/(login)/page")}>
-              <Text
-                style={[
-                  styles.buttonText,
-                  { color: darkMode ? "#fff" : "#000" },
-                ]}
-              >
-                Login
-              </Text>
-              
+            {selectedOption === "pin" && (
+              <View>
+                <Text style={styles.label}>Pin:</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Enter your pin"
+                  placeholderTextColor={theme.placeholder}
+                  keyboardType="numeric"
+                  maxLength={6}
+                  value={pin}
+                  onChangeText={setPin}
+                />
+              </View>
+            )}
+          </View>
+          <View>
+            <Pressable style={styles.button} onPress={handleRegister}>
+              {loading ? (
+                <>
+                  <ActivityIndicator size="small" color={theme.btnColor} />
+                  <Text style={styles.buttonText}> Registering...</Text>
+                </>
+              ) : (
+                <Text style={styles.buttonText}>Register</Text>
+              )}
             </Pressable>
           </View>
         </View>

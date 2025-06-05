@@ -12,7 +12,7 @@ import {
   PanResponder,
 } from "react-native";
 import * as Clipboard from "expo-clipboard";
-import * as SecureStore from "expo-secure-store";
+
 import { CameraView, useCameraPermissions } from "expo-camera";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
@@ -32,10 +32,11 @@ export default function InferenceScreen() {
   const [imageUri, setImageUri] = useState(null);
   const [showCamera, setShowCamera] = useState(true);
   const [darkMode, setDarkMode] = useState(true);
+  const [nemeth, setNemeth] = useState("");
   const cameraRef = useRef(null);
   const wsRef = useRef(null);
   const { width } = useWindowDimensions();
-const token = SecureStore.getItem("userToken")
+
   const theme = darkMode ? Colors.dark : Colors.light;
 
   const styles = StyleSheet.create({
@@ -107,7 +108,7 @@ const token = SecureStore.getItem("userToken")
   // WebSocket connection
   useEffect(() => {
     const socket = new WebSocket(
-      `ws://192.168.137.1:8000/convert/ws/image-to-latex?token=${token}`
+      "ws://192.168.137.1:8000/convert/ws/image-to-latex"
     );
 
     socket.onopen = () => {
@@ -119,6 +120,7 @@ const token = SecureStore.getItem("userToken")
       const data = JSON.parse(event.data);
       console.log("📩 Message from server:", data);
       setLatexOutput(data.latex);
+      setNemeth(data.nemeth);
       Speech.speak(data.spoken_text, {
         language: "en",
         rate: 0.9,
@@ -278,6 +280,8 @@ const token = SecureStore.getItem("userToken")
 
             {!loading && latexOutput !== "" && (
               <View style={{ alignItems: "center", marginVertical: 20 }}>
+               
+
                 <View
                   accessible={true}
                   accessibilityLabel={`Math Output: ${latexOutput}`}

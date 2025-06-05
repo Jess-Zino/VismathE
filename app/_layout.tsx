@@ -39,9 +39,9 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === "dark" ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="(SplashScreen)" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen name="(home)" options={{ headerShown: false }}/>
+        <Stack.Screen name="(SplashScreen)" options={{ headerShown: false, animation:"fade" }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false , animation:"fade" }} />
+        <Stack.Screen name="(home)" options={{ headerShown: false , animation:"fade"}}/>
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />
